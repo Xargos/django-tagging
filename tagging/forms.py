@@ -32,7 +32,16 @@ class TagField(forms.CharField):
         value = super(TagField, self).clean(value)
         if value == u'':
             return value
-        for tag_name in parse_tag_input(value):
+
+        parsed_tag_input = parse_tag_input(value)
+
+        if settings.MAX_TAGS_PER_OBJECTS_ENABLED:
+            if len(parsed_tag_input) > settings.MAX_TAGS_PER_OBJECTS:
+                raise forms.ValidationError(
+                    _('Only %s tags are allowed.') %
+                        settings.MAX_TAGS_PER_OBJECTS)
+        
+        for tag_name in parsed_tag_input:
             if len(tag_name) > settings.MAX_TAG_LENGTH:
                 raise forms.ValidationError(
                     _('Each tag may be no more than %s characters long.') %
